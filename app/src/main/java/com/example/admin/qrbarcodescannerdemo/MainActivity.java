@@ -1,5 +1,6 @@
 package com.example.admin.qrbarcodescannerdemo;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -22,6 +23,7 @@ import static android.Manifest.permission.CAMERA;
 
 public class MainActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler {
 
+    private Context context;
     private static final int REQUEST_CAMERA = 1;
     private ZXingScannerView zXingScannerView;
     private static int camId = Camera.CameraInfo.CAMERA_FACING_BACK;
@@ -31,27 +33,23 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
         super.onCreate(savedInstanceState);
         zXingScannerView = new ZXingScannerView(this);
         setContentView(zXingScannerView);
+        context = this;
 
         int currentApiVersion = Build.VERSION.SDK_INT;
-        if (currentApiVersion >=  Build.VERSION_CODES.M){
-            if(checkPermission())
-            {
+        if (currentApiVersion >= Build.VERSION_CODES.M) {
+            if (checkPermission()) {
                 Toast.makeText(getApplicationContext(), "Permission already granted!", Toast.LENGTH_LONG).show();
-            }
-            else
-            {
+            } else {
                 requestPermission();
             }
         }
     }
 
-    private boolean checkPermission()
-    {
+    private boolean checkPermission() {
         return (ContextCompat.checkSelfPermission(getApplicationContext(), CAMERA) == PackageManager.PERMISSION_GRANTED);
     }
 
-    private void requestPermission()
-    {
+    private void requestPermission() {
         ActivityCompat.requestPermissions(this, new String[]{CAMERA}, REQUEST_CAMERA);
     }
 
@@ -62,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
         int currentapiVersion = Build.VERSION.SDK_INT;
         if (currentapiVersion >= Build.VERSION_CODES.M) {
             if (checkPermission()) {
-                if(zXingScannerView == null) {
+                if (zXingScannerView == null) {
                     zXingScannerView = new ZXingScannerView(this);
                     setContentView(zXingScannerView);
                 }
@@ -80,14 +78,14 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
         zXingScannerView.stopCamera();
     }
 
-     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults){
-        switch (requestCode){
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
             case REQUEST_CAMERA:
-                if (grantResults.length > 0){
+                if (grantResults.length > 0) {
                     boolean cameraAccepted = grantResults[0] == PackageManager.PERMISSION_GRANTED;
-                    if (cameraAccepted){
+                    if (cameraAccepted) {
                         Toast.makeText(getApplicationContext(), "Permission Granted, Now you can access camera", Toast.LENGTH_LONG).show();
-                    }else {
+                    } else {
                         Toast.makeText(getApplicationContext(), "Permission Denied, You cannot access to camera", Toast.LENGTH_LONG).show();
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                             if (shouldShowRequestPermissionRationale(CAMERA)) {
@@ -118,9 +116,6 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
                 .show();
     }
 
-
-
-
     @Override
     public void handleResult(Result result) {
 
@@ -139,7 +134,14 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
         builder.setNeutralButton("Go To", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(myResult));
+//                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(myResult));
+//                context.startActivity(browserIntent);
+
+                Intent browserIntent;
+                if (myResult.startsWith("http://") || myResult.startsWith("https://"))
+                    browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(myResult));
+                else
+                    browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://google.com/search?q=" + myResult));
                 startActivity(browserIntent);
             }
         });
